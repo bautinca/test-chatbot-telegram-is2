@@ -7,7 +7,6 @@ RUN groupadd -r -g 1001 appuser
 RUN useradd -m -r -u 1001 -g appuser appuser
 COPY Gemfile /app
 COPY Gemfile.lock /app
-RUN gem install bundler
 RUN bundler install --without test development
 COPY . /app
 LABEL GIT_COMMIT=$GIT_COMMIT
