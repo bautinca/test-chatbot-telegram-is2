@@ -42,3 +42,10 @@ El log level se especifica en la configuracion con uno de los siguientes valores
 # Más información
 
 Para utilizar otras funcionalidades de Telegram como los Keyboards especiales ver la doc en: https://github.com/atipugin/telegram-bot-ruby
+
+# Explicacion funcionamiento gral. bot
+Este bot es un proceso que esta todo el dia 'polleando' a Telegram pegandole al endpoint **/getUpdates** entonces es un loop que hace getUpdates se fija si tiene un mensaje nuevo, si no tiene un mensaje nuevo duerme un poquito y vuelve a hacer getUpdates. Cuando recibe un mensaje nuevo lo procesa y es ahi donde usa la clase `Routes` para ver que comando es y que respuesta tiene que dar. Si nos fijamos en cada endpoint llamamos a `send_message` que es la funcion que hace el POST a Telegram
+
+Como hace un polling constante a getUpdates es por eso que en los test unitarios en la funcion `when_i_send_text` hacemos un stub de la request a getUpdates para que nunca salga de la maquina y no haga un request real a Telegram. Esto es importante porque si no hacemos el stub, cada vez que corremos los tests se hace un request real a Telegram y eso es muy lento y ademas nos puede bloquear el bot si hacemos muchos requests.
+
+Por otro lado tambien stubeamos el endpoint **/sendMessage** para que nunca salga de la maquina, por eso en la funcion `then_i_get_text` hacemos un stub de la request a sendMessage para que nunca salga de la maquina y no haga un request real a Telegram.

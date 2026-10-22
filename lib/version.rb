@@ -1,3 +1,4 @@
+# Version representa la version del bot, esta clase tiene un metodo current que devuelve la version actual del bot
 class Version
   MAYOR = 0
   MINOR = 0
