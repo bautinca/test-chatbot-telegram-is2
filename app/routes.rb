@@ -76,7 +76,7 @@ class Routes
     bot.api.send_message(chat_id: message.chat.id, text: Version.current) # La clase Version tiene un metodo current que devuelve la version actual del bot, la clase esta en ./lib/version.rb
   end
 
-  # ------------ MENSAJE NUEVO -----------------
+  # ------------ MENSAJES NUEVO -----------------
   # Vamos a usar la libreria Faraday que sirve para hacer peticiones HTTP a otras APIs, en este caso usaremos la API publica
   # de Pokemon para obtener info. de los pokemones (en este caso del pokemon Ditto)
   on_message '/pokemon' do |bot, message|
@@ -96,6 +96,15 @@ class Routes
     pokemon_text = "Pokemon: #{response_json['name']} - Height: #{response_json['height']} - Weight: #{response_json['weight']}" # Hacemos que nos devuelva el nombre del pokemon, su altura y peso
     bot.api.send_message(chat_id: message.chat.id, text: pokemon_text)
   end
+
+  # Nuevo endpoint donde le pasamos /render <nombre_pokemon> y nos devuelve una imagen del pokemon que le pasamos como parametro
+  on_message_pattern %r{/render (?<name>.*)} do |bot, message, args|
+    response = Faraday.get("https://pokeapi.co/api/v2/pokemon/#{args['name']}") # Lo pasamos como parametro a la URL de la API de Pokemon para obtener info del pokemon que el usuario quiere buscar
+    response_json = JSON.parse(response.body)
+    pokemon_image_url = response_json['sprites']['front_default'] # Obtenemos la URL de la imagen del pokemon que el usuario quiere buscar
+    bot.api.send_photo(chat_id: message.chat.id, photo: pokemon_image_url) # Enviamos la imagen del pokemon al usuario
+  end
+
 
   default do |bot, message|
     bot.api.send_message(chat_id: message.chat.id, text: 'Uh? No te entiendo! Me repetis la pregunta?')
