@@ -29,6 +29,33 @@ Los tests utilizan WebMock. Para testear el cliente, siempre usar `app.run_once`
 
 Se puede utilizar la gema incluida en el repo [Faraday](https://github.com/lostisland/faraday#faraday)
 
+# Endpoint de IA: `/ia`
+
+El comando `/ia <consulta>` delega la respuesta a un agente sin herramientas. El bot Ruby no contiene la lógica del modelo: actúa como controlador y llama al puerto de aplicación `Ia::Application::RespondToPrompt`; su adaptador de infraestructura se comunica por HTTP con el servicio `ai_agent`.
+
+El servicio `ai_agent` está escrito en Python porque LangGraph no ofrece una librería oficial para Ruby. Allí hay un grafo LangGraph de un único nodo (`answer_with_ollama`), que consulta un modelo local mediante Ollama. No requiere una API key y usa `qwen2.5:1.5b` por defecto.
+
+Para ejecutarlo localmente se necesitan Python 3.10+ y [Ollama](https://ollama.com):
+
+```sh
+ollama pull qwen2.5:1.5b
+ollama serve
+
+cd ai_agent
+python -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --port 8000
+```
+
+En otra terminal, iniciar el bot con `LANGGRAPH_AGENT_URL=http://localhost:8000`. Por ejemplo, `/ia hola como estás?` llegará al modelo local y su respuesta se enviará al chat de Telegram.
+
+Variables configurables del servicio de IA:
+
+* `LANGGRAPH_AGENT_URL`: URL del servicio LangGraph; por defecto `http://localhost:8000`.
+* `OLLAMA_BASE_URL`: URL de Ollama vista por el servicio; por defecto `http://localhost:11434`.
+* `OLLAMA_MODEL`: modelo local; por defecto `qwen2.5:1.5b`.
+
 # Correr con docker en modo produccion
 
 docker-compose -f docker-compose.prod.yml --env-file ./.env up --build

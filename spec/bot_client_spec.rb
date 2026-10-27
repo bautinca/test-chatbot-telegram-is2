@@ -184,4 +184,15 @@ describe 'BotClient' do
 
     BotClient.new(token).run_once
   end
+
+  it 'delegates /ia prompts to the IA use case' do
+    token = 'fake_token'
+    responder = instance_double(Ia::Application::RespondToPrompt)
+
+    when_i_send_text(token, '/ia hola como estas?')
+    then_i_get_text(token, '¡Estoy muy bien!')
+    allow(responder).to receive(:call).with(prompt: 'hola como estas?').and_return('¡Estoy muy bien!')
+
+    BotClient.new(token, ai_responder: responder).run_once
+  end
 end

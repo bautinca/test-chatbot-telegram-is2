@@ -7,6 +7,10 @@ require "#{File.dirname(__FILE__)}/tv/series"
 class Routes
   include Routing
 
+  def initialize(ai_responder:)
+    @ai_responder = ai_responder
+  end
+
   on_message '/start' do |bot, message|
     bot.api.send_message(chat_id: message.chat.id, text: "Hola, #{message.from.first_name}")
   end
@@ -105,8 +109,21 @@ class Routes
     bot.api.send_photo(chat_id: message.chat.id, photo: pokemon_image_url) # Enviamos la imagen del pokemon al usuario
   end
 
+  on_message_pattern %r{\A/ia(?:\s+(?<prompt>.+))?\z} do |bot, message, args|
+    answer = ai_responder.call(prompt: args['prompt'])
+    bot.api.send_message(chat_id: message.chat.id, text: answer)
+  rescue Ia::Application::EmptyPrompt
+    bot.api.send_message(chat_id: message.chat.id, text: 'Escribí una consulta después de /ia. Ejemplo: /ia ¿Cómo estás?')
+  rescue Ia::Infrastructure::AgentUnavailable
+    bot.api.send_message(chat_id: message.chat.id, text: 'El agente de IA no está disponible en este momento. Intentá de nuevo más tarde.')
+  end
+
 
   default do |bot, message|
     bot.api.send_message(chat_id: message.chat.id, text: 'Uh? No te entiendo! Me repetis la pregunta?')
   end
+
+  private
+
+  attr_reader :ai_responder
 end
